@@ -9,6 +9,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     HOME=/home/lteuser
 
+RUN mkdir -p /home/lteuser/.streamlit && chown -R lteuser:lteuser /home/lteuser
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
