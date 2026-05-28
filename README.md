@@ -78,3 +78,29 @@ Google Sheets access is read-only.
 
 The dashboard expects the following columns:
 
+- `Date`
+- `Client Name`
+- `Item`
+- `Cost`
+- `Purchased` (TRUE/FALSE)
+- `Status` (optional)
+
+---
+
+## 🐳 Docker (Local Test)
+
+### Build image
+
+```powershell
+docker build -t toys-tracker .
+```
+
+### Run container
+
+Mount your local Streamlit secrets file so `st.secrets` works inside the container.
+
+```powershell
+docker run --rm -p 8501:8501 -v "${PWD}\.streamlit\secrets.toml:/home/lteuser/.streamlit/secrets.toml:ro" toys-tracker
+```
+
+Open `http://localhost:8501`.

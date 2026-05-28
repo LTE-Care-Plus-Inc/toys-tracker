@@ -87,6 +87,19 @@ def to_money(series: pd.Series) -> pd.Series:
         errors="coerce"
     ).fillna(0.0)
 
+def first_matching_column(df: pd.DataFrame, candidates: list[str], *, required_label: str) -> pd.Series:
+    """
+    Return first matching column as a Series.
+    If duplicate headers exist, select the left-most matching column.
+    """
+    for name in candidates:
+        if name in df.columns:
+            col = df[name]
+            if isinstance(col, pd.DataFrame):
+                return col.iloc[:, 0]
+            return col
+    raise ValueError(f"{required_label} column missing. Found: {df.columns.tolist()}")
+
 # =====================================================
 # LOAD DATA
 # =====================================================
@@ -129,13 +142,10 @@ def load_data():
     toys.columns = toys.columns.str.strip()
     toys = toys.loc[:, toys.columns != ""]
 
-    # Flexible client column
-    if "Clients" in toys.columns:
-        toys["Client"] = toys["Clients"]
-    elif "Client Name" in toys.columns:
-        toys["Client"] = toys["Client Name"]
-    else:
-        raise ValueError(f"Client column missing in Toys sheet. Found: {toys.columns.tolist()}")
+    # Flexible client column (safe with duplicate headers)
+    toys["Client"] = first_matching_column(
+        toys, ["Clients", "Client Name"], required_label="Client (Toys sheet)"
+    )
 
     # ================= CLIENT LIST SHEET =================
     try:
@@ -191,13 +201,10 @@ def build_summary(toys: pd.DataFrame, auth: pd.DataFrame) -> pd.DataFrame:
 
     toys = toys[toys["Inactive_bool"] == False].copy()
 
-    # Flexible auth client column
-    if "Client" in auth.columns:
-        auth["Client"] = auth["Client"]
-    elif "Client Name" in auth.columns:
-        auth["Client"] = auth["Client Name"]
-    else:
-        raise ValueError(f"Client column missing in Client List sheet. Found: {auth.columns.tolist()}")
+    # Flexible auth client column (safe with duplicate headers)
+    auth["Client"] = first_matching_column(
+        auth, ["Client", "Client Name"], required_label="Client (Client List sheet)"
+    )
 
     auth["Client"] = normalize_name(auth["Client"]).str.lower()
 
